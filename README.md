@@ -1,6 +1,6 @@
 # Info_Fonda
 
-##Prerequis
+## Prérequis
 
 ```
 pip install python-sat
