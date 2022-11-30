@@ -59,13 +59,95 @@ test = options.test
 
 def exist_sol(seq,bound): # retourne True si et seulement si il existe un plongement de score au moins 'bound'
 # A COMPLETER
+    cnf = CNF() # construction d'un objet formule en forme normale conjonctive (Conjunctive Normal Form)
+    vpool = IDPool(start_from=1) # pour le stockage des identifiants entiers des couples (i,j) ?
+    length = len(seq)
+
+    print(seq[0])
+    print(bound)
+
+
+    # Contrainte : une case à au plus une valeur/élément
+    # Ne fontionnera pas si v de Xijv est la valeur. Il faut que ce soit l'indice. Utiliser une autre variable que X ?
+    
+    for i in range(length):
+        for j in range(length):
+            for x, e1 in enumerate(options.seq):
+                for y, e2 in enumerate(options.seq):
+                    if not (x is y):
+                        cnf.append([-vpool.id((i,j,x)),-vpool.id((i,j,y))])
+
+    # A COMPLETER
+    # Contrainte : élément P(e+1) est voisin directe de P(e)
+    
+    for i in range(length):
+        for j in range(length):
+            for k in range(length):
+                for l in range(length):
+                    for x, e1 in enumerate(seq):
+                        for y, e2 in enumerate(seq):
+                            if ((x+1 == y) and ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
+                                #print(i,j , ": "+e1 , "indice : ", x ," / ", k,l , ": "+e2, "indice : ", y)
+                                cnf.append([-vpool.id((i,j,x)),vpool.id((k,l,y))])
+
+    # A COMPLETER
+    # Contrainte : il faut au moins x Paires (élements voisins de valeur 1)
+
+    # Code du prof (mail)
+    # myvpool = IDPool(start_from=1)
+    # cnf = CNF()
+    # lits = [0]
+    # for i in range(n):
+    #   lits.append(myvpool.id(i))
+    #   if i<n-1: 
+    #       cnf.add_clause([myvpool.id(i), myvpool.id(i+1))
+    # cnf.extend(CardEnc.atleast(lits,5,vpool=myvpool,encoding=EncType.seqcounter))
+
+
+    print(cnf.clauses) 
+
+    # TEST // A DEPLACER
+    # s = Glucose4(use_timer=True) # pour utiliser le solveur Glucose
+    # s.append_formula(cnf.clauses, no_return=False)
+
+
+    # print("Resolution...")
+    # sat = s.solve()
+    # print("satisfaisable : " + str(sat))
+
+
+    # print("Temps de resolution : " + '{0:.2f}s'.format(s.time()))
+    # Print résolution
+    # model = s.get_model()
+    # for i in range(length):
+    #     for j in range(length):
+    #         for e in seq:
+    #             print(vpool.id((i,j,e)))
+
+
     return(True) # a modifier
 # vous pouvez utiliser les methodes de la classe pysat.card pour creer des contraintes de cardinalites (au moins k, au plus k,...)
 
     
 def compute_max_score(seq): # calcul le meilleur score pour la sequence seq, il doit donc retourne un entier, methode utilisee: dichotomie par defaut, incrementale si l'option -i est active
 # A COMPLETER
-    return(10) # a modifier
+    max_Not_Found = True
+
+    #Recherche incremental
+    if (incremental):
+        best_score = 0
+        while(max_Not_Found):
+            best_score =+ 1
+            max_Not_Found = exist_sol(seq,best_score)
+        
+        return(best_score-1)
+
+    #Recherche dichotomique
+    else:
+        best_score = len(seq)/2
+    
+        return(best_score)
+
     
 ####################################################################        
 ########### CE CODE NE DOIT PAS ETRE MODIFIE #######################
@@ -183,6 +265,9 @@ if test:
 elif options.bound!=None:
     # cas ou la borne est fournie en entree: on test si la sequence (qui doit etre donnee en entree) a un score superieur ou egal a la borne donnee
     # si oui, on affiche "SAT". Si l'option d'affichage est active, alors il faut egalement afficher une solution
+    print("Exist Sol")
+    #exist_sol(options.seq,options.bound)
+
     print("DEBUT DU TEST DE SATISFIABILITE")
     # A COMPLETER
     print("FIN DU TEST DE SATISFIABILITE")
