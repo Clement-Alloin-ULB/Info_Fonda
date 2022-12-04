@@ -66,29 +66,50 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
     print(seq[0])
     print(bound)
 
+    # Contrainte #1 
+    # Chaque élement est au moins dans une case. Pour tout élement p , il existe une position ij
+        
+    for p, v in enumerate(options.seq):
+        d = [] 
+        for i in range(length):
+            for j in range(length):
+                d.append(vpool.id((i,j,p)))
+        cnf.append(d)
+
+    # Contrainte #2
+    # Il y a au plus une case par élément. Chaque élément est au plus dans une case
+
+    for i in range(length):
+        for j in range(length):
+            for k in range(length):
+                for l in range(length):
+                    for p, v in enumerate(options.seq):
+                        if ((i != k) or (j != l)):
+                            cnf.append([-vpool.id((i,j,p)),-vpool.id((k,l,p))])
     
-    # Contrainte : une case à au plus une valeur/élément
-    # Ne fontionnera pas si v de Xijv est la valeur. Il faut que ce soit l'indice. Utiliser une autre variable que X ?
+    
+    # Contrainte #3
+    # Il y a au plus un élément par case
     
     for i in range(length):
         for j in range(length):
-            for x, e1 in enumerate(options.seq):
-                for y, e2 in enumerate(options.seq):
-                    if not (x is y):
-                        cnf.append([-vpool.id((i,j,x)),-vpool.id((i,j,y))])
+            for p1, v1 in enumerate(options.seq):
+                for p2, v2 in enumerate(options.seq):
+                    if not (p1 is p2):  
+                        cnf.append([-vpool.id((i,j,p1)),-vpool.id((i,j,p2))])
 
     # A COMPLETER
-    # Contrainte : élément P(e+1) est voisin directe de P(e)
+    # Contrainte #4
+    # Elément p est voisin directe de p+1
     
     for i in range(length):
         for j in range(length):
             for k in range(length):
                 for l in range(length):
-                    for x, e1 in enumerate(seq):
-                        for y, e2 in enumerate(seq):
-                            if ((x+1 == y) and ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
-                                #print(i,j , ": "+e1 , "indice : ", x ," / ", k,l , ": "+e2, "indice : ", y)
-                                cnf.append([-vpool.id((i,j,x)),vpool.id((k,l,y))])
+                    for p1, v1 in enumerate(seq):
+                        for p2, v2 in enumerate(seq):
+                            if ((p1+1 == p2) and ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))): #(ij) (kl) voisins et p1 p2 se suivent
+                                cnf.append([-vpool.id((i,j,p1)),vpool.id((k,l,p2))])
 
     # A COMPLETER
     # Contrainte : il faut au moins x Paires (élements voisins de valeur 1)
@@ -100,50 +121,27 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
         for j in range(length):
             for k in range(length):
                 for l in range(length):
-                    for v1 in seq:
-                        for v2 in seq:
+                    for p1, v1 in enumerate(seq):
+                        for p2, v2 in enumerate(seq):
                             if ( ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
-                                lits.append([i,j,k,l]) # Veut une liste de litéraux , comment faire une liste de litéraux avec 4 int ?
+                                lits.append(vpool.id([i,j,k,l])) # Veut une liste de litéraux , comment faire une liste de litéraux avec 4 int ?
                                 if ((v1 == 1) and (v2 == 1)):
-                                    cnf.append() # Contrainte pair en FNC , à faire
+                                    cnf.append(-vpool.id((i,j,k,l),vpool.id((i,j,p1)))) # Correcte ?
+                                    cnf.append(-vpool.id((i,j,k,l),vpool.id((i,j,p2)))) # Correcte ?
+                                    cnf.append(vpool.id((i,j,k,l),-vpool.id((i,j,p1)),-vpool.id((i,j,p2)))) # Correcte ?
     
     cnf.extend(CardEnc.atleast(lits,bound,vpool=vpool,encoding=EncType.seqcounter))
-                                
 
+    #Résolution
+    s = Glucose4(use_timer=True) # pour utiliser le solveur Glucose
+    s.append_formula(cnf.clauses, no_return=False)
+    sat = s.solve()
+    print("satisfaisable : " + str(sat))
+    print(sat)
 
-    # Code du prof (mail)
-    # myvpool = IDPool(start_from=1)
-    # cnf = CNF()
-    # lits = [0]
-    # for i in range(n):
-    #   lits.append(myvpool.id(i))
-    #   if i<n-1: 
-    #       cnf.add_clause([myvpool.id(i), myvpool.id(i+1))
-    # cnf.extend(CardEnc.atleast(lits,5,vpool=myvpool,encoding=EncType.seqcounter))
-
-    #print(cnf.clauses) 
-
-    # TEST // A DEPLACER
-    # s = Glucose4(use_timer=True) # pour utiliser le solveur Glucose
-    # s.append_formula(cnf.clauses, no_return=False)
-
-
-    # print("Resolution...")
-    # sat = s.solve()
-    # print("satisfaisable : " + str(sat))
-
-
-    # print("Temps de resolution : " + '{0:.2f}s'.format(s.time()))
-    # Print résolution
-    # model = s.get_model()
-    # for i in range(length):
-    #     for j in range(length):
-    #         for e in seq:
-    #             print(vpool.id((i,j,e)))
-
+    print("Temps de resolution : " + '{0:.2f}s'.format(s.time()))
 
     return(True) # a modifier
-# vous pouvez utiliser les methodes de la classe pysat.card pour creer des contraintes de cardinalites (au moins k, au plus k,...)
 
     
 def compute_max_score(seq): # calcul le meilleur score pour la sequence seq, il doit donc retourne un entier, methode utilisee: dichotomie par defaut, incrementale si l'option -i est active
@@ -289,16 +287,6 @@ elif options.bound!=None:
     # A COMPLETER
     print("FIN DU TEST DE SATISFIABILITE")
 
-    # myvpool = IDPool(start_from=1)
-    # lits = [0]
-    # for i in range(3):
-    #     for j in range(3):
-    #         for k in range(3):
-    #             for l in range(3):
-    #                 if ( ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
-    #                     lits.append(myvpool.id([i,j,k,l]))
-
-    # print("Test", lits)
 
 elif not (incremental):
     # on affiche le score maximal qu'on calcule par dichotomie
