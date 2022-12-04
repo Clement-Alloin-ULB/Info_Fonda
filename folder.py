@@ -146,11 +146,11 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
                     if vpool.id((i,j,p)) in model:
                         print(p, "in (",i,",",j,")" )
 
-    return(True) # a modifier
+    return(sat)
 
     
 def compute_max_score(seq): # calcul le meilleur score pour la sequence seq, il doit donc retourne un entier, methode utilisee: dichotomie par defaut, incrementale si l'option -i est active
-# A COMPLETER
+
     max_Not_Found = True
 
     #Recherche incremental
@@ -328,11 +328,9 @@ if test:
 elif options.bound!=None:
     # cas ou la borne est fournie en entree: on test si la sequence (qui doit etre donnee en entree) a un score superieur ou egal a la borne donnee
     # si oui, on affiche "SAT". Si l'option d'affichage est active, alors il faut egalement afficher une solution
-    print("Exist Sol")
-    exist_sol(options.seq,options.bound)
 
     print("DEBUT DU TEST DE SATISFIABILITE")
-    # A COMPLETER
+    exist_sol(options.seq,options.bound)
     print("FIN DU TEST DE SATISFIABILITE")
 
 
@@ -340,12 +338,11 @@ elif not (incremental):
     # on affiche le score maximal qu'on calcule par dichotomie
     # on affiche egalement un plongement de score maximal si l'option d'affichage est active
     print("DEBUT DU CALCUL DU MEILLEUR SCORE PAR DICHOTOMIE")
-    # A COMPLETER
+    compute_max_score(options.seq)
     print("FIN DU CALCUL DU MEILLEUR SCORE")
     
 elif not test:
     # Pareil que dans le cas precedent mais avec la methode incrementale
-    # A COMPLETER
     print("DEBUT DU CALCUL DU MEILLEUR SCORE PAR METHODE INCREMENTALE")
-    # A COMPLETER
+    compute_max_score(options.seq)
     print("FIN DU CALCUL DU MEILLEUR SCORE")
