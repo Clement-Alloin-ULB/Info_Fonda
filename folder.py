@@ -92,6 +92,8 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
 
     # A COMPLETER
     # Contrainte : il faut au moins x Paires (élements voisins de valeur 1)
+    # Y'ijkl' est vrai si ij et kl sont voisins et valeur 1 -> y ijkl l'ensemble des voisins qui sera l'ensemble des litéraux
+    # TEST A COMPLETER
     lits = [0]
 
     for i in range(length):
@@ -100,9 +102,10 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
                 for l in range(length):
                     for v1 in seq:
                         for v2 in seq:
-                            if ( ((v1 == 1) and (v2 == 1)) and ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
-                                cnf.append() # Contrainte pair
-
+                            if ( ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
+                                lits.append([i,j,k,l]) # Veut une liste de litéraux , comment faire une liste de litéraux avec 4 int ?
+                                if ((v1 == 1) and (v2 == 1)):
+                                    cnf.append() # Contrainte pair en FNC , à faire
     
     cnf.extend(CardEnc.atleast(lits,bound,vpool=vpool,encoding=EncType.seqcounter))
                                 
@@ -285,6 +288,17 @@ elif options.bound!=None:
     print("DEBUT DU TEST DE SATISFIABILITE")
     # A COMPLETER
     print("FIN DU TEST DE SATISFIABILITE")
+
+    # myvpool = IDPool(start_from=1)
+    # lits = [0]
+    # for i in range(3):
+    #     for j in range(3):
+    #         for k in range(3):
+    #             for l in range(3):
+    #                 if ( ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
+    #                     lits.append(myvpool.id([i,j,k,l]))
+
+    # print("Test", lits)
 
 elif not (incremental):
     # on affiche le score maximal qu'on calcule par dichotomie
