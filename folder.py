@@ -9,6 +9,7 @@ from pysat.formula import IDPool
 from pysat.card import *
 from optparse import OptionParser
 import func_timeout
+from math import sqrt, ceil
 
 
 ##### OPTIONS POUR L'UTILISATION EN LIGNE DE COMMANDE ###############
@@ -63,9 +64,6 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
     vpool = IDPool(start_from=1) # pour le stockage des identifiants entiers des couples (i,j) ?
     length = len(seq)
 
-    print(seq[0])
-    print(bound)
-
     # Contrainte #1 
     # Chaque élement est au moins dans une case. Pour tout élement p , il existe une position ij
         
@@ -98,7 +96,6 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
                     if not (p1 is p2):  
                         cnf.append([-vpool.id((i,j,p1)),-vpool.id((i,j,p2))])
 
-    # A COMPLETER
     # Contrainte #4
     # Elément p est voisin directe de p+1
     
@@ -111,11 +108,9 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
                             if ((p1+1 == p2) and ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))): #(ij) (kl) voisins et p1 p2 se suivent
                                 cnf.append([-vpool.id((i,j,p1)),vpool.id((k,l,p2))])
 
-    # A COMPLETER
+
     # Contrainte : il faut au moins x Paires (élements voisins de valeur 1)
-    # Y'ijkl' est vrai si ij et kl sont voisins et valeur 1 -> y ijkl l'ensemble des voisins qui sera l'ensemble des litéraux
-    # TEST A COMPLETER
-    lits = [0]
+    lits = []
 
     for i in range(length):
         for j in range(length):
@@ -124,22 +119,32 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
                     for p1, v1 in enumerate(seq):
                         for p2, v2 in enumerate(seq):
                             if ( ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
-                                lits.append(vpool.id([i,j,k,l])) # Veut une liste de litéraux , comment faire une liste de litéraux avec 4 int ?
+                                lits.append(vpool.id((i,j,k,l))) 
                                 if ((v1 == 1) and (v2 == 1)):
-                                    cnf.append(-vpool.id((i,j,k,l),vpool.id((i,j,p1)))) # Correcte ?
-                                    cnf.append(-vpool.id((i,j,k,l),vpool.id((i,j,p2)))) # Correcte ?
-                                    cnf.append(vpool.id((i,j,k,l),-vpool.id((i,j,p1)),-vpool.id((i,j,p2)))) # Correcte ?
+                                    cnf.append(-vpool.id((i,j,k,l),vpool.id((i,j,p1)))) 
+                                    cnf.append(-vpool.id((i,j,k,l),vpool.id((i,j,p2)))) 
+                                    cnf.append(vpool.id((i,j,k,l),-vpool.id((i,j,p1)),-vpool.id((i,j,p2)))) 
     
     cnf.extend(CardEnc.atleast(lits,bound,vpool=vpool,encoding=EncType.seqcounter))
 
     #Résolution
+    print(cnf.clauses)
     s = Glucose4(use_timer=True) # pour utiliser le solveur Glucose
     s.append_formula(cnf.clauses, no_return=False)
     sat = s.solve()
-    print("satisfaisable : " + str(sat))
-    print(sat)
+    print("satisfaisable : " , sat)
 
     print("Temps de resolution : " + '{0:.2f}s'.format(s.time()))
+
+    if affichage_sol and sat:
+        print("Solution")
+        model = s.get_model()
+        
+        for i in range(length):
+            for j in range(length):
+                for p, v in enumerate(seq):
+                    if vpool.id((i,j,p)) in model:
+                        print(p, "in (",i,",",j,")" )
 
     return(True) # a modifier
 
@@ -159,9 +164,52 @@ def compute_max_score(seq): # calcul le meilleur score pour la sequence seq, il 
 
     #Recherche dichotomique
     else:
-        best_score = len(seq)/2
-    
-        return(best_score)
+        bestScore = 0
+        theoreticalBestScore = best_score_per_length(len(seq))
+
+        lowerBound = 0
+        higherBound = theoreticalBestScore
+
+        testScore = int(theoreticalBestScore / 2)
+
+        while True:
+            if exist_sol(seq, testScore):
+                bestScore = testScore
+                lowerBound = bestScore
+            else:
+                higherBound = bestScore
+
+            previousTestScore = testScore
+            testScore = int((higherBound + lowerBound) / 2)
+
+            if previousTestScore == testScore:
+                return bestScore
+
+
+#Best score (number of pairs of 1) if the sequence is full of 1's - àpd de length of 4
+def best_score_per_length(length):
+    squareRoot = int(sqrt(length))
+    rest = length % sqrt(length)
+
+    if length < 4:
+        return (length-1)
+
+    #If the length is a square number, the best structure is a square of 1's of length (length)^1/2
+    if rest == 0:
+        bestScore = 2 * squareRoot * (squareRoot - 1)
+        return bestScore
+    else:
+        bigSquare = 2 * squareRoot * (squareRoot - 1)
+        numberOfLines = int(ceil(rest/squareRoot))
+        numberOfCompleteLines = int(rest/squareRoot)
+        restOnLastLine = 0
+
+        if numberOfLines - numberOfCompleteLines == 1:
+            restOnLastLine = (length % squareRoot) % squareRoot
+
+        additionnalPairs = numberOfCompleteLines * squareRoot + numberOfCompleteLines * (squareRoot - 1) + restOnLastLine + (restOnLastLine - 1)
+        bestScore = bigSquare + additionnalPairs
+        return bestScore 
 
     
 ####################################################################        
