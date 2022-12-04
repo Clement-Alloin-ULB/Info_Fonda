@@ -66,7 +66,7 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
     print(seq[0])
     print(bound)
 
-
+    
     # Contrainte : une case à au plus une valeur/élément
     # Ne fontionnera pas si v de Xijv est la valeur. Il faut que ce soit l'indice. Utiliser une autre variable que X ?
     
@@ -92,6 +92,21 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
 
     # A COMPLETER
     # Contrainte : il faut au moins x Paires (élements voisins de valeur 1)
+    lits = [0]
+
+    for i in range(length):
+        for j in range(length):
+            for k in range(length):
+                for l in range(length):
+                    for v1 in seq:
+                        for v2 in seq:
+                            if ( ((v1 == 1) and (v2 == 1)) and ((abs(i-k)==0)and (abs(j-l)==1) or (abs(i-k)==1)and (abs(j-l)==0))):
+                                cnf.append() # Contrainte pair
+
+    
+    cnf.extend(CardEnc.atleast(lits,bound,vpool=vpool,encoding=EncType.seqcounter))
+                                
+
 
     # Code du prof (mail)
     # myvpool = IDPool(start_from=1)
@@ -103,8 +118,7 @@ def exist_sol(seq,bound): # retourne True si et seulement si il existe un plonge
     #       cnf.add_clause([myvpool.id(i), myvpool.id(i+1))
     # cnf.extend(CardEnc.atleast(lits,5,vpool=myvpool,encoding=EncType.seqcounter))
 
-
-    print(cnf.clauses) 
+    #print(cnf.clauses) 
 
     # TEST // A DEPLACER
     # s = Glucose4(use_timer=True) # pour utiliser le solveur Glucose
@@ -266,7 +280,7 @@ elif options.bound!=None:
     # cas ou la borne est fournie en entree: on test si la sequence (qui doit etre donnee en entree) a un score superieur ou egal a la borne donnee
     # si oui, on affiche "SAT". Si l'option d'affichage est active, alors il faut egalement afficher une solution
     print("Exist Sol")
-    #exist_sol(options.seq,options.bound)
+    exist_sol(options.seq,options.bound)
 
     print("DEBUT DU TEST DE SATISFIABILITE")
     # A COMPLETER
